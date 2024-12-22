@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة تكلفة الشغل</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-image: url('https://i.ibb.co/k4Sr8Lh/your_image_name.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            direction: rtl;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: gold;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input {
+            width: calc(100% - 20px);
+            padding: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+            height: 40px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result-container {
+            margin-top: 20px;
+        }
+
+        .result-input {
+            width: calc(100% - 20px);
+            padding: 5px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            background-color: #f0f8ff;
+            color: green;
+            font-weight: bold;
+            font-size: 20px;
+            text-align: center;
+            cursor: not-allowed;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            height: 40px;
+        }
+
+        .account-table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .account-table th, .account-table td {
+            border: 1px solid #007bff;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .account-table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .whatsapp-button {
+            background-color: #25d366;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .whatsapp-button:hover {
+            background-color: #1da851;
+        }
+
+        .company-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            color: #333;
+            text-align: right;
+        }
+
+        .company-info h2 {
+            color: #007bff;
+            margin: 0 0 10px;
+        }
+
+        .company-info p {
+            margin: 5px 0;
+            color: #555;
+        }
+    </style>
+    <script>
+        // استرجاع الحسابات من LocalStorage عند تحميل الصفحة
+        function loadAccounts() {
+            const savedAccounts = localStorage.getItem('accounts');
+            return savedAccounts ? JSON.parse(savedAccounts) : [];
+        }
+
+        // حفظ الحسابات في LocalStorage
+        function saveAccounts() {
+            localStorage.setItem('accounts', JSON.stringify(accounts));
+        }
+
+        let accounts = loadAccounts();
+        let accountId = accounts.length ? accounts[accounts.length - 1].id + 1 : 1;
+
+        function addAccount(type, cost, area, weight, customerName, customerPhone) {
+            const accountCode = `A${accountId++}`;
+            const newAccount = {
+                id: accountId - 1,
+                code: accountCode,
+                type,
+                cost,
+                area,
+                weight,
+                customerName,
+                customerPhone
+            };
+            accounts.push(newAccount);
+            saveAccounts();
+            updateAccountsTable();
+        }
+
+        function updateAccountsTable() {
+            const tableBody = document.getElementById('accounts-table-body');
+            tableBody.innerHTML = '';
+
+            accounts.forEach(account => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${account.code}</td>
+                    <td>${account.type}</td>
+                    <td>${account.cost}</td>
+                    <td>${account.area || '-'}</td>
+                    <td>${account.weight || '-'}</td>
+                    <td>${account.customerName}</td>
+                    <td>${account.customerPhone}</td>
+                    <td><button class="whatsapp-button" onclick="shareOnWhatsApp('${account.customerPhone}', '${account.type}', '${account.cost}', '${account.area}', '${account.weight}', '${account.customerName}')">واتساب</button></td>
+                    <td><button onclick="deleteAccount(${account.id})">حذف</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function toggleAccounts() {
+            const accountsSection = document.getElementById('accounts-section');
+            accountsSection.style.display = accountsSection.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function shareOnWhatsApp(phone, type, cost, area, weight, customerName) {
+            const egyptCode = '20'; // كود دولة مصر
+            const formattedPhone = phone.startsWith('0') ? phone.slice(1) : phone;
+            const message = `
+                نوع الحساب: ${type}
+                التكلفة: ${cost}
+                المساحة: ${area}
+                الوزن: ${weight}
+                اسم العميل: ${customerName}
+            `;
+            const url = `https://wa.me/${egyptCode}${formattedPhone}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+
+        function calculateByMeter() {
+            const customerName = document.getElementById('customer-name').value;
+            const customerPhone = document.getElementById('customer-phone').value;
+            const length = parseFloat(document.getElementById('length2').value);
+            const width = parseFloat(document.getElementById('width2').value);
+            const price = parseFloat(document.getElementById('price').value);
+
+            if (!isNaN(length) && !isNaN(width) && !isNaN(price)) {
+                const area = (length / 100) * (width / 100);
+                const totalCost = area * price;
+                document.getElementById('result-meter').value = `${totalCost.toFixed(2)} جنيه`;
+                document.getElementById('area-meter').value = `${area.toFixed(2)} متر²`;
+
+                addAccount('المتر', `${totalCost.toFixed(2)} جنيه`, `${area.toFixed(2)} متر²`, null, customerName, customerPhone);
+            } else {
+                document.getElementById('result-meter').value = 'يرجى إدخال قيم صحيحة!';
+            }
+        }
+
+        function calculateByKilo() {
+            const customerName = document.getElementById('customer-name').value;
+            const customerPhone = document.getElementById('customer-phone').value;
+            const length = parseFloat(document.getElementById('length-kilo').value);
+            const width = parseFloat(document.getElementById('width-kilo').value);
+            const weight = parseFloat(document.getElementById('weight-kilo').value);
+            const jobLength = parseFloat(document.getElementById('job-length').value);
+            const jobWidth = parseFloat(document.getElementById('job-width').value);
+            const kiloPrice = parseFloat(document.getElementById('kilo-price').value);
+
+            if (!isNaN(length) && !isNaN(width) && !isNaN(weight) && !isNaN(jobLength) && !isNaN(jobWidth) && !isNaN(kiloPrice)) {
+                const area = (length / 100) * (width / 100);
+                const weightPerMeter = weight / area;
+                const jobArea = (jobLength / 100) * (jobWidth / 100);
+                const jobWeight = jobArea * weightPerMeter;
+                const totalCost = jobWeight * kiloPrice;
+
+                document.getElementById('result-kilo').value = `${totalCost.toFixed(2)} جنيه`;
+                document.getElementById('kilo-per-meter').value = `${weightPerMeter.toFixed(2)} كجم`;
+
+                addAccount('الكيلو', `${totalCost.toFixed(2)} جنيه`, `${jobArea.toFixed(2)} متر²`, `${jobWeight.toFixed(2)} كجم`, customerName, customerPhone);
+            } else {
+                document.getElementById('result-kilo').value = 'يرجى إدخال قيم صحيحة!';
+            }
+        }
+
+        function deleteAccount(accountId) {
+            const confirmDelete = confirm('هل تريد حذف الحساب؟');
+            if (confirmDelete) {
+                accounts = accounts.filter(account => account.id !== accountId);
+                saveAccounts();
+                updateAccountsTable();
+            }
+        }
+
+        window.onload = updateAccountsTable;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>حاسبة تكلفة الشغل</h1>
+
+        <label for="customer-name">اسم العميل:</label>
+        <input type="text" id="customer-name">
+
+        <label for="customer-phone">رقم الهاتف:</label>
+        <input type="text" id="customer-phone">
+
+        <button onclick="toggleAccounts()">عرض/إخفاء الحسابات السابقة</button>
+
+        <div id="accounts-section" style="display:none;">
+            <h2>الحسابات السابقة</h2>
+            <table class="account-table">
+                <thead>
+                    <tr>
+                        <th>الكود</th>
+                        <th>نوع الحساب</th>
+                        <th>التكلفة</th>
+                        <th>المساحة</th>
+                        <th>الوزن</th>
+                        <th>اسم العميل</th>
+                        <th>رقم الهاتف</th>
+                        <th>واتساب</th>
+                        <th>حذف</th>
+                    </tr>
+                </thead>
+                <tbody id="accounts-table-body"></tbody>
+            </table>
+        </div>
+
+        <div id="meter-section">
+            <h2>حساب التكلفة بالمتر</h2>
+            <label for="length2">طول الشغل (سم):</label>
+            <input type="number" id="length2">
+
+            <label for="width2">عرض الشغل (سم):</label>
+            <input type="number" id="width2">
+
+            <label for="price">سعر المتر (جنيه):</label>
+            <input type="number" id="price">
+
+            <button onclick="calculateByMeter()">احسب</button>
+            <div class="result-container">
+                <label>سعر التكلفة:</label>
+                <input type="text" id="result-meter" class="result-input" readonly>
+
+                <label>المساحة (متر²):</label>
+                <input type="text" id="area-meter" class="result-input" readonly>
+            </div>
+        </div>
+
+        <div id="kilo-section">
+            <h2>حساب التكلفة بالكيلو</h2>
+            <label for="length-kilo">طول اللوح (سم):</label>
+            <input type="number" id="length-kilo">
+
+            <label for="width-kilo">عرض اللوح (سم):</label>
+            <input type="number" id="width-kilo">
+
+            <label for="weight-kilo">وزن اللوح (كجم):</label>
+            <input type="number" id="weight-kilo">
+
+            <label for="job-length">طول الشغل (سم):</label>
+            <input type="number" id="job-length">
+
+            <label for="job-width">عرض الشغل (سم):</label>
+            <input type="number" id="job-width">
+
+            <label for="kilo-price">سعر الكيلو (جنيه):</label>
+            <input type="number" id="kilo-price">
+
+            <button onclick="calculateByKilo()">احسب</button>
+            <div class="result-container">
+                <label>سعر التكلفة:</label>
+                <input type="text" id="result-kilo" class="result-input" readonly>
+                <label>وزن المتر المربع:</label>
+                <input type="text" id="kilo-per-meter" class="result-input" readonly>
+            </div>
+        </div>
+
+        <div class="company-info">
+            <h2>بيانات الشركة</h2>
+            <p><strong>اسم الشركة:</strong> شركة MAZAYA STEEL لتقطيع الألواح المعدنية</p>
+            <p><strong>رقم الهاتف:</strong> 01013265168</p>
+            <p><strong>العنوان:</strong> السماحية الكبرى / مركز بلقاس / الدقهلية</p>
+        </div>
+    </div>
+</body>
+</html>
